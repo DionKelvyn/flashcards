@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flashcards — PROCERGS / Fundatec</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#22c55e; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --card-w: 300px; --card-h: 200px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:linear-gradient(180deg,#071025 0%, #071731 100%);
+      color:#e6eef8;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:28px auto;
+      padding:20px;
+    }
+    header{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      margin-bottom:18px;
+    }
+    h1{
+      font-size:20px;
+      margin:0;
+    }
+    p.lead{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .controls{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .btn{
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:8px 12px;
+      border-radius:10px;
+      color:inherit;
+      cursor:pointer;
+    }
+    .btn:hover{
+      transform:translateY(-2px);
+    }
+    .btn.primary{
+      background:linear-gradient(90deg,#064e3b,#065f46);
+      border:0;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    input.search{
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:transparent;
+      color:inherit;
+      min-width:220px;
+    }
+    main{
+      margin-top:18px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(var(--card-w),1fr));
+      gap:18px;
+    }
+    /* card */
+    .card-outer{
+      width:var(--card-w);
+      height:var(--card-h);
+      perspective:1000px;
+    }
+    .card{
+      width:100%;
+      height:100%;
+      position:relative;
+      transform-style:preserve-3d;
+      transition:transform .6s;
+      cursor:pointer;
+    }
+    .card.flipped{
+      transform:rotateY(180deg);
+    }
+    .face{
+      position:absolute;
+      inset:0;
+      border-radius:12px;
+      padding:14px;
+      backface-visibility:hidden;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+    }
+    .front{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .back{
+      background:linear-gradient(180deg, rgba(2,6,23,0.6), rgba(0,0,0,0.6));
+      transform:rotateY(180deg);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .q{
+      font-size:16px;
+      font-weight:600;
+      margin-bottom:8px;
+    }
+    .a{
+      font-size:14px;
+      color:var(--muted);
+    }
+    .meta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:10px;
+      width:100%;
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+    /* add card form */
+    .panel{
+      margin-top:18px;
+      padding:14px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    textarea{
+      width:100%;
+      min-height:70px;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:transparent;
+      color:inherit;
+    }
+    footer{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    @media (max-width:680px){
+      :root{
+        --card-w:260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Flashcards — PROCERGS (Fundatec)</h1>
+        <p class="lead">Clique no cartão para virar. Use a busca para filtrar por palavra.</p>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="small">Frontend puro — HTML/CSS/JS</div>
+      </div>
+    </header>
+
+    <div class="topbar">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="search" class="search" placeholder="Buscar... (ex: 'memória', 'kernel')" />
+        <div class="controls">
+          <button id="shuffleBtn" class="btn">Embaralhar</button>
+          <button id="showAllBtn" class="btn">Mostrar todos</button>
+          <button id="exportBtn" class="btn">Exportar JSON</button>
+          <label class="btn" style="cursor:pointer">
+            Importar
+            <input id="importFile" type="file" accept="application/json" style="display:none" />
+          </label>
+        </div>
+      </div>
+      <div>
+        <button id="toggleForm" class="btn primary">Adicionar card</button>
+      </div>
+    </div>
+
+    <main>
+      <section id="grid" class="grid" aria-live="polite"></section>
+
+      <section id="formPanel" class="panel" style="display:none">
+        <h3 style="margin-top:0">Novo flashcard</h3>
+        <label class="small">Frente (pergunta / termo)</label>
+        <textarea id="frontInput" placeholder="Ex: O que é memória virtual?"></textarea>
+        <label class="small">Verso (resposta)</label>
+        <textarea id="backInput" placeholder="Ex: Espaço de endereçamento..."></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+          <button id="addCard" class="btn primary">Adicionar</button>
+          <button id="cancelAdd" class="btn">Cancelar</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>Arquivo local — os cards são mantidos no LocalStorage do navegador. Você pode exportar/importar JSON para sincronizar entre dispositivos.</footer>
+  </div>
+
+  <script>
+    // ----- Dados de exemplo (substitua pelo seu conteúdo) -----
+    const SAMPLE = [
+      {front: 'O que é CPU?', back: 'Unidade central de processamento: executa instruções do programa.'},
+      {front: 'Qual a finalidade do kernel?', back: 'Gerenciar recursos do sistema e comunicação HW/SW.'},
+      {front: 'Defina memória virtual', back: 'Mecanismo que usa disco para ampliar espaço de memória percebido.'},
+      {front: 'O que é deadlock?', back: 'Estado em que processos ficam esperando recursos indefinidamente.'}
+    ];
+
+    // ----- App state -----
+    let cards = loadFromStorage() || SAMPLE.slice();
+    const grid = document.getElementById('grid');
+    const searchInput = document.getElementById('search');
+
+    // ----- render -----
+    function render(filter) {
+      grid.innerHTML = '';
+      const list = filter ? cards.filter(c => (c.front+c.back).toLowerCase().includes(filter.toLowerCase())) : cards;
+      if(list.length === 0){
+        grid.innerHTML = '<div style="color:var(--muted);padding:20px">Nenhum card corresponde à busca.</div>';
+        return;
+      }
+      list.forEach((c, idx)=>{
+        const outer = document.createElement('div'); outer.className='card-outer';
+        const card = document.createElement('div'); card.className='card'; card.tabIndex=0;
+
+        const front = document.createElement('div'); front.className='face front';
+        front.innerHTML = `<div class="q">${escapeHtml(c.front)}</div><div class="small">#${idx+1}</div>`;
+
+        const back = document.createElement('div'); back.className='face back';
+        back.innerHTML = `<div class="a">${escapeHtml(c.back)}</div><div class="meta"><div class="small">Verso</div><button class="btn" data-idx="${idx}">Excluir</button></div>`;
+
+        card.appendChild(front); card.appendChild(back); outer.appendChild(card); grid.appendChild(outer);
+
+        // click to flip
+        card.addEventListener('click', (e)=>{ card.classList.toggle('flipped'); });
+        // keyboard
+        card.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); card.classList.toggle('flipped'); }});
+
+        // delete button
+        back.querySelector('button').addEventListener('click', (ev)=>{
+          ev.stopPropagation(); // don't flip
+          const realIndex = findRealIndex(c);
+          if(confirm('Excluir este flashcard?')){
+            cards.splice(realIndex,1);
+            saveToStorage();
+            render(searchInput.value);
+          }
+        });
+      });
+    }
+
+    function findRealIndex(cardObj){
+      return cards.findIndex(c=>c.front===cardObj.front && c.back===cardObj.back);
+    }
+
+    // ----- helpers -----
+    function escapeHtml(str){ return String(str).replace(/[&<>\"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;' })[s]); }
+
+    // storage
+    function saveToStorage(){ localStorage.setItem('procergs_flashcards_v1', JSON.stringify(cards)); }
+    function loadFromStorage(){ try{ const raw = localStorage.getItem('procergs_flashcards_v1'); return raw ? JSON.parse(raw) : null; }catch(e){return null;} }
+
+    // ----- UI actions -----
+    document.getElementById('shuffleBtn').addEventListener('click', ()=>{shuffle(cards); saveToStorage(); render(searchInput.value);});
+    document.getElementById('showAllBtn').addEventListener('click', ()=>{ searchInput.value=''; render(); });
+
+    // add form
+    const toggleForm = document.getElementById('toggleForm'); const formPanel = document.getElementById('formPanel');
+    toggleForm.addEventListener('click', ()=>{ formPanel.style.display = formPanel.style.display === 'none' ? 'block' : 'none'; });
+    document.getElementById('cancelAdd').addEventListener('click', ()=>{ formPanel.style.display='none'; });
+    document.getElementById('addCard').addEventListener('click', ()=>{
+      const f = document.getElementById('frontInput').value.trim(); const b = document.getElementById('backInput').value.trim();
+      if(!f || !b){ alert('Preencha frente e verso'); return; }
+      cards.unshift({front:f, back:b}); saveToStorage(); document.getElementById('frontInput').value=''; document.getElementById('backInput').value=''; render();
+    });
+
+    // search
+    searchInput.addEventListener('input', (e)=>{ render(e.target.value); });
+
+    // export
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const data = JSON.stringify(cards, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='flashcards_procergs.json'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    // import
+    document.getElementById('importFile').addEventListener('change', async (e)=>{
+      const f = e.target.files[0]; if(!f) return; try{
+        const txt = await f.text(); const parsed = JSON.parse(txt);
+        if(Array.isArray(parsed)){
+          if(confirm('Substituir os cards atuais? OK = substituir, Cancel = adicionar ao topo')){
+            cards = parsed; saveToStorage(); render();
+          } else {
+            cards = parsed.concat(cards); saveToStorage(); render();
+          }
+        }else{ alert('Formato inválido: JSON deve ser uma lista de objetos {front,back}'); }
+      }catch(err){ alert('Erro ao importar: '+err.message); }
+      e.target.value='';
+    });
+
+    // utilities
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+    // initial render
+    render();
+
+    // expose for debugging
+    window.__flashcards = {cards, saveToStorage, render};
+  </script>
+</body>
+</html>
