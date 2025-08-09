@@ -219,14 +219,22 @@
   <script>
     // ----- Dados de exemplo (substitua pelo seu conteúdo) -----
     const SAMPLE = [
-      {front: 'O que é CPU?', back: 'Unidade central de processamento: executa instruções do programa.'},
-      {front: 'Qual a finalidade do kernel?', back: 'Gerenciar recursos do sistema e comunicação HW/SW.'},
-      {front: 'Defina memória virtual', back: 'Mecanismo que usa disco para ampliar espaço de memória percebido.'},
-      {front: 'O que é deadlock?', back: 'Estado em que processos ficam esperando recursos indefinidamente.'}
+      {front: 'O que o Model faz em um cadastro de usuários?', back: 'Valida dados, insere no banco e retorna o resultado da operação.'},
+      {front: 'A View contém lógica de negócios?', back: 'Não, ela apenas exibe os dados ao usuário.'},
+      {front: 'Qual é o papel do Controller em relação ao Model?', back: 'Solicitar ações ao Model com base nas requisições da View.'},
+      {front: 'A View pode acessar diretamente o banco de dados?', back: 'Não, o acesso ao Model é feito pelo Controller.'},
+      {front: 'O que o Model fornece ao COntroller?', back: 'Dados e resultados de suas operações.'},
+      {front: 'A camada Model interage com qual recurso externo principal?', back:' Com o banco de dados ou outras fontes de dados.'},
+      {front: 'Qual a principal resposibilidade da camada Model no padrão MVC?', back: 'Executar a lógica de negócios e manipular os dados da aplicação.'},
+      {front: 'Qual é uma vantabem do MVC ao adicionar novas funcionalidades?', back: 'Permite modificar a interface (Visão) sem alterar a lógica de negócio (Modelo).'},
+      {front: 'O MVC permite a reutilização de código? Por quê?', back: 'Sim, pois os componentes bem definidos podem ser reaproveitados em outras partes ou projetos.'},
+      {front: 'Por que o MVC melhora a tertabilidade de aplicação?', back:'Porque cada componente (Modelo, Visão, Controlador) poode ser testado de forma isolada;'},
+      
     ];
 
     // ----- App state -----
-    let cards = loadFromStorage() || SAMPLE.slice();
+    let cards = SAMPLE.slice();
+    // let cards = loadFromStorage() || SAMPLE.slice();     Essa linha pode ser usada para carregar do LocalStorage
     const grid = document.getElementById('grid');
     const searchInput = document.getElementById('search');
 
@@ -275,7 +283,7 @@
     // ----- helpers -----
     function escapeHtml(str){ return String(str).replace(/[&<>\"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;' })[s]); }
 
-    // storage
+    // salvar no LocalStorage
     function saveToStorage(){ localStorage.setItem('procergs_flashcards_v1', JSON.stringify(cards)); }
     function loadFromStorage(){ try{ const raw = localStorage.getItem('procergs_flashcards_v1'); return raw ? JSON.parse(raw) : null; }catch(e){return null;} }
 
